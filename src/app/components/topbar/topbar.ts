@@ -56,17 +56,11 @@ export class TopbarComponent {
     this.cartService.toggleCart();
   }
 
-  toggleSearch() {
-    const willOpen = !this.searchService.isOpen();
-    this.searchService.toggle();
-    if (willOpen && this.router.url !== '/') {
+  applySearch(query: string) {
+    this.searchService.setQuery(query);
+    if (this.router.url !== '/') {
       this.router.navigate(['/']);
     }
-  }
-
-  updateSearch(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchService.setQuery(input.value);
   }
 
   handleProfileClick() {

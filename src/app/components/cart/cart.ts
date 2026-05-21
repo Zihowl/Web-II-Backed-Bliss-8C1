@@ -108,6 +108,8 @@ export class CartComponent {
     this.validationErrors.set([]);
     // Guardar datos del cliente en el servicio para usar en checkout
     this.cartService.setCustomerData(this.customer);
+    // Cerrar el carrito antes de redirigir al checkout
+    this.closeCart();
     // Navegar a la vista de checkout donde se muestran los botones PayPal
     this.router.navigate(['/checkout']);
   }
