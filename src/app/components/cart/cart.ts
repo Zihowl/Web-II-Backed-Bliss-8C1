@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CartService, CustomerData } from '../../services/cart.service';
 import { Product } from '../../models/product.model';
 import { Signal } from '@angular/core';
+import { AuthService } from '../../core/services/auth.service';
 
 type CartLine = Product & { quantity: number; subtotal: number };
 
@@ -16,6 +17,7 @@ type CartLine = Product & { quantity: number; subtotal: number };
 export class CartComponent {
   private cartService = inject(CartService);
   private router = inject(Router);
+  private authService = inject(AuthService);
 
   items: Signal<Product[]>;
   isOpen: Signal<boolean>;
@@ -46,14 +48,29 @@ export class CartComponent {
     name: '',
     phone: '',
     note: '',
-    deliveryType: 'store',
+    deliveryType: 'home',
     address: '',
-    paymentType: 'cash',
+    paymentType: 'card',
   };
 
   constructor() {
     this.items = this.cartService.products;
     this.isOpen = this.cartService.isCartOpen;
+    this.prefillNameFromAuth();
+
+    effect(() => {
+      const user = this.authService.currentUser();
+      if (user?.name && this.isOpen()) {
+        this.customer.name = user.name;
+      }
+    });
+  }
+
+  private prefillNameFromAuth(): void {
+    const user = this.authService.currentUser();
+    if (user?.name) {
+      this.customer.name = user.name;
+    }
   }
 
   decreaseQuantity(id: number) {

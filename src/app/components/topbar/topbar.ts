@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, HostListener, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { CartService } from '../../services/cart.service';
 import { SearchService } from '../../services/search.service';
+import { AuthService } from '../../core/services/auth.service';
 import { CartComponent } from '../cart/cart';
 
 @Component({
@@ -15,16 +16,23 @@ import { CartComponent } from '../cart/cart';
 export class TopbarComponent {
   private readonly cartService = inject(CartService);
   private readonly searchService = inject(SearchService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
   searchIsOpen = this.searchService.isOpen;
   searchQuery = this.searchService.query;
+  isAuthenticated = this.authService.isAuthenticated;
+  currentUser = this.authService.currentUser;
   isMinimal = signal(this.computeMinimal(this.router.url));
+  dropdownOpen = signal(false);
 
   constructor() {
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-      .subscribe(e => this.isMinimal.set(this.computeMinimal(e.urlAfterRedirects)));
+      .subscribe(e => {
+        this.isMinimal.set(this.computeMinimal(e.urlAfterRedirects));
+        this.closeDropdown();
+      });
   }
 
   goBack() {
@@ -61,7 +69,29 @@ export class TopbarComponent {
     this.searchService.setQuery(input.value);
   }
 
+  handleProfileClick() {
+    this.toggleDropdown();
+  }
+
+  toggleDropdown() {
+    this.dropdownOpen.set(!this.dropdownOpen());
+  }
+
+  closeDropdown() {
+    this.dropdownOpen.set(false);
+  }
+
   logOut() {
-    console.info('La acción de cerrar sesión todavía no está implementada.');
+    this.authService.logout();
+    this.router.navigate(['/']);
+    this.closeDropdown();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.profile-container')) {
+      this.closeDropdown();
+    }
   }
 }

@@ -1,0 +1,159 @@
+<div class="profile-container">
+  <article class="profile-card">
+    @if (loading()) {
+      <div class="loading-state">
+        <p>Cargando perfil...</p>
+      </div>
+    } @else if (user()) {
+      <div class="profile-header">
+        <div class="avatar">{{ getInitials() }}</div>
+        <div class="user-info-header">
+          <h1>{{ user().name }}</h1>
+          <p class="user-email">{{ user().email }}</p>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 'view'"
+          (click)="switchTab('view')"
+        >
+          Mi perfil
+        </button>
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 'edit'"
+          (click)="switchTab('edit')"
+        >
+          Editar
+        </button>
+      </div>
+
+      @if (activeTab === 'view') {
+        <div class="tab-content">
+          <div class="profile-section">
+            <div class="info-row">
+              <label class="info-label">Nombre</label>
+              <p class="info-value">{{ user().name }}</p>
+            </div>
+            <div class="info-row">
+              <label class="info-label">Email</label>
+              <p class="info-value">{{ user().email }}</p>
+            </div>
+            <div class="info-row">
+              <label class="info-label">Teléfono</label>
+              <p class="info-value">{{ user().phone || 'No especificado' }}</p>
+            </div>
+            <div class="info-row">
+              <label class="info-label">Dirección</label>
+              <p class="info-value">{{ user().address || 'No especificada' }}</p>
+            </div>
+            <div class="info-row">
+              <label class="info-label">Rol</label>
+              <p class="info-value">{{ user().role === 'admin' ? 'Administrador' : 'Cliente' }}</p>
+            </div>
+            @if (user().created_at) {
+              <div class="info-row">
+                <label class="info-label">Miembro desde</label>
+                <p class="info-value">{{ formatDate(user().created_at) }}</p>
+              </div>
+            }
+          </div>
+
+          <div class="action-buttons">
+            <button type="button" class="logout-button" (click)="logOut()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+      } @else if (activeTab === 'edit') {
+        <div class="tab-content">
+          <form (ngSubmit)="saveProfile()" class="edit-form">
+            @if (successMessage) {
+              <div class="success-message">{{ successMessage }}</div>
+            }
+
+            @if (errorMessage) {
+              <div class="error-message">{{ errorMessage }}</div>
+            }
+
+            <div class="form-group">
+              <label for="edit-name" class="form-label">Nombre completo</label>
+              <input
+                id="edit-name"
+                type="text"
+                name="name"
+                class="form-input"
+                [(ngModel)]="editForm.name"
+                [class.has-error]="fieldErrors['name']"
+              />
+              @if (fieldErrors['name']) {
+                <span class="field-error">{{ fieldErrors['name'] }}</span>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="edit-phone" class="form-label">Teléfono</label>
+              <input
+                id="edit-phone"
+                type="tel"
+                name="phone"
+                class="form-input"
+                [(ngModel)]="editForm.phone"
+                placeholder="5512345678"
+                [class.has-error]="fieldErrors['phone']"
+              />
+              @if (fieldErrors['phone']) {
+                <span class="field-error">{{ fieldErrors['phone'] }}</span>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="edit-address" class="form-label">Dirección</label>
+              <input
+                id="edit-address"
+                type="text"
+                name="address"
+                class="form-input"
+                [(ngModel)]="editForm.address"
+                [class.has-error]="fieldErrors['address']"
+              />
+              @if (fieldErrors['address']) {
+                <span class="field-error">{{ fieldErrors['address'] }}</span>
+              }
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="save-button"
+                [disabled]="loadingEdit()"
+              >
+                @if (loadingEdit()) {
+                  Guardando...
+                } @else {
+                  Guardar cambios
+                }
+              </button>
+              <button
+                type="button"
+                class="cancel-button"
+                (click)="switchTab('view')"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+    }
+  </article>
+</div>

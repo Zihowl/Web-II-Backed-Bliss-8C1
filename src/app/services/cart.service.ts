@@ -1,8 +1,9 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Product } from '../models/product.model';
 
-export type DeliveryType = 'store' | 'home';
-export type PaymentType = 'cash' | 'card';
+export type DeliveryType = 'home';
+export type PaymentType = 'card';
 
 export interface CustomerData {
   name: string;
@@ -15,6 +16,8 @@ export interface CustomerData {
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
+  private platformId = inject(PLATFORM_ID);
+
   // Reactive list of cart products
   private productsSignal = signal<Product[]>([]);
   private isCartOpenSignal = signal(false);
@@ -86,6 +89,10 @@ export class CartService {
   }
 
   exportarXML(customer?: CustomerData, paypalData?: { orderId: string; status: string }) {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
     const products = this.productsSignal();
     const now = new Date().toISOString();
     const groupedProducts = this.groupProducts(products);
@@ -93,9 +100,9 @@ export class CartService {
       name: customer?.name?.trim() ?? '',
       phone: customer?.phone?.trim() ?? '',
       note: customer?.note?.trim() ?? '',
-      deliveryType: customer?.deliveryType ?? 'store',
+      deliveryType: customer?.deliveryType ?? 'home',
       address: customer?.address?.trim() ?? '',
-      paymentType: customer?.paymentType ?? 'cash',
+      paymentType: customer?.paymentType ?? 'card',
     };
 
     // Estructura XML manual
@@ -177,11 +184,11 @@ export class CartService {
   }
 
   private getDeliveryLabel(deliveryType: DeliveryType): string {
-    return deliveryType === 'home' ? 'Domicilio' : 'Recoger en sucursal';
+    return 'Domicilio';
   }
 
   private getPaymentLabel(paymentType: PaymentType): string {
-    return paymentType === 'card' ? 'Tarjeta' : 'Efectivo';
+    return 'Tarjeta';
   }
 
   private escapeXml(value: string): string {

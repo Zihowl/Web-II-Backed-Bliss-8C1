@@ -1,14 +1,15 @@
 const express = require('express');
 const cors = require('cors');
 const productsRoutes = require('./routes/products.routes');
+const paypalRoutes = require('./routes/paypal.routes');
+const authRoutes = require('./routes/auth.routes');
+const userRoutes = require('./routes/user.routes');
 const { errorHandler } = require('./middleware/error.middleware');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-const paypalRoutes = require('./routes/paypal.routes.ts');
 
 app.get('/', (req, res) => {
   res.json({
@@ -22,6 +23,8 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api', productsRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
 app.use('/api/paypal', paypalRoutes.paypalRouter);
 app.use(errorHandler);
 

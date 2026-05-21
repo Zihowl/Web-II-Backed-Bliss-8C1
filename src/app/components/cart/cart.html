@@ -50,26 +50,8 @@
     </label>
 
     <label>
-      Tipo de entrega:
-      <select [value]="customer.deliveryType" (change)="customer.deliveryType = $any($event.target).value">
-        <option value="store">Recoger en sucursal</option>
-        <option value="home">Domicilio</option>
-      </select>
-    </label>
-
-    @if (customer.deliveryType === 'home') {
-      <label>
-        Dirección:
-        <input type="text" [value]="customer.address" (input)="customer.address = $any($event.target).value" />
-      </label>
-    }
-
-    <label>
-      Tipo de pago:
-      <select [value]="customer.paymentType" (change)="customer.paymentType = $any($event.target).value">
-        <option value="cash">Efectivo</option>
-        <option value="card">Tarjeta</option>
-      </select>
+      Dirección:
+      <input type="text" [value]="customer.address" (input)="customer.address = $any($event.target).value" />
     </label>
   </div>
 

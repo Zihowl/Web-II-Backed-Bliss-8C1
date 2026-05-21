@@ -1,0 +1,207 @@
+<div class="history-container">
+  <article class="history-card">
+    <header class="history-header">
+      <h2>Historial de pedidos</h2>
+      <p class="history-subtitle">Tu historial de compras en Backed Bliss</p>
+    </header>
+
+    @if (loading()) {
+      <div class="loading-state">
+        <p>Cargando historial...</p>
+      </div>
+    } @else if (errorMessage) {
+      <div class="error-state">
+        <p>{{ errorMessage }}</p>
+      </div>
+    } @else if (orders().length === 0) {
+      <div class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="21" r="1"></circle>
+          <circle cx="20" cy="21" r="1"></circle>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        <p>No tienes pedidos aún</p>
+        <a href="/" class="back-link">Continuar comprando</a>
+      </div>
+    } @else {
+      <div class="orders-list">
+        @for (order of orders(); track order.id) {
+          <div class="order-card">
+            <div class="order-header-row">
+              <div class="order-number">
+                <span class="label">Pedido #</span>
+                <span class="value">{{ order.id }}</span>
+              </div>
+              <div class="order-date">
+                <span class="label">Fecha</span>
+                <span class="value">{{ formatDate(order.created_at) }}</span>
+              </div>
+              <div class="order-amount">
+                <span class="label">Total</span>
+                <span class="value">{{ formatCurrency(order.total) }}</span>
+              </div>
+            </div>
+
+            <div class="order-info-row">
+              <div class="order-items-count">
+                <span class="label">{{ countItems(order) }}</span>
+                <span class="label-text">{{ countItems(order) === 1 ? 'producto' : 'productos' }}</span>
+              </div>
+              <button
+                type="button"
+                class="invoice-button"
+                (click)="openInvoice(order)"
+                aria-label="Ver factura"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="11" x2="12" y2="17"></line>
+                  <line x1="9" y1="14" x2="15" y2="14"></line>
+                </svg>
+                Ver factura
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </article>
+
+  @if (selectedOrder()) {
+    <div class="modal-overlay" (click)="closeInvoice()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Factura CFDI</h3>
+          <button type="button" class="close-button" (click)="closeInvoice()" aria-label="Cerrar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="invoice-content">
+          <!-- Encabezado CFDI -->
+          <div class="invoice-section invoice-title">
+            <h4>COMPROBANTE DE COMPRA - CFDI</h4>
+          </div>
+
+          <!-- Datos del emisor -->
+          <div class="invoice-section">
+            <h5>EMISOR</h5>
+            <div class="invoice-data">
+              <div class="data-row">
+                <span class="label">Razón Social:</span>
+                <span class="value">{{ CFDI_EMISOR.razonSocial }}</span>
+              </div>
+              <div class="data-row">
+                <span class="label">RFC:</span>
+                <span class="value">{{ CFDI_EMISOR.rfc }}</span>
+              </div>
+              <div class="data-row">
+                <span class="label">Régimen Fiscal:</span>
+                <span class="value">{{ CFDI_EMISOR.regimen }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Datos del receptor -->
+          <div class="invoice-section">
+            <h5>RECEPTOR</h5>
+            <div class="invoice-data">
+              <div class="data-row">
+                <span class="label">RFC:</span>
+                <span class="value">{{ CFDI_RECEPTOR.rfc }}</span>
+              </div>
+              <div class="data-row">
+                <span class="label">Uso CFDI:</span>
+                <span class="value">{{ CFDI_RECEPTOR.usoCFDI }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conceptos (productos) -->
+          <div class="invoice-section">
+            <h5>CONCEPTOS</h5>
+            <div class="invoice-table">
+              <div class="table-header">
+                <div class="col-name">Descripción</div>
+                <div class="col-qty">Cantidad</div>
+                <div class="col-price">Precio Unitario</div>
+                <div class="col-amount">Importe</div>
+              </div>
+              @for (item of getOrderItems(selectedOrder()!); track item.id) {
+                <div class="table-row">
+                  <div class="col-name">{{ item.name }}</div>
+                  <div class="col-qty">{{ item.quantity || 1 }}</div>
+                  <div class="col-price">{{ formatCurrency(item.price) }}</div>
+                  <div class="col-amount">{{ formatCurrency((item.price * (item.quantity || 1))) }}</div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Totales -->
+          <div class="invoice-section">
+            <div class="totals-box">
+              <div class="total-row">
+                <span class="label">Subtotal:</span>
+                <span class="value">{{ formatCurrency(getSubtotal(selectedOrder()!.total)) }}</span>
+              </div>
+              <div class="total-row">
+                <span class="label">IVA (16%):</span>
+                <span class="value">{{ formatCurrency(getIVA(selectedOrder()!.total)) }}</span>
+              </div>
+              <div class="total-row total">
+                <span class="label">Total:</span>
+                <span class="value">{{ formatCurrency(selectedOrder()!.total) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Datos de pago -->
+          <div class="invoice-section">
+            <h5>FORMA Y MÉTODO DE PAGO</h5>
+            <div class="invoice-data">
+              <div class="data-row">
+                <span class="label">Método de Pago:</span>
+                <span class="value">{{ CFDI_PAGO.metodoPago }}</span>
+              </div>
+              <div class="data-row">
+                <span class="label">Forma de Pago:</span>
+                <span class="value">{{ CFDI_PAGO.formaPago }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Folio y fecha -->
+          <div class="invoice-section footer-data">
+            <div class="data-row">
+              <span class="label">Folio:</span>
+              <span class="value">#{{ selectedOrder()!.id }}</span>
+            </div>
+            <div class="data-row">
+              <span class="label">Fecha y Hora:</span>
+              <span class="value">{{ formatDate(selectedOrder()!.created_at) }} {{ formatTime(selectedOrder()!.created_at) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="action-button print" (click)="printInvoice()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            Imprimir
+          </button>
+          <button type="button" class="action-button close" (click)="closeInvoice()">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

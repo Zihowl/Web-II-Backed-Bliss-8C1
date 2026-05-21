@@ -48,7 +48,7 @@ Si el usuario proporciona información incorrecta, incompleta o falsa, la respon
 
 ### Entregas y recolección
 
-Los pedidos pueden estar sujetos a entrega a domicilio o recolección en sucursal.
+Los pedidos están sujetos exclusivamente a entrega a domicilio, dado nuestro modelo Dark Kitchen 100% digital.
 
 No nos hacemos responsables por el tiempo de entrega.
 
