@@ -1,0 +1,149 @@
+<div class="admin-page">
+  <h2>Panel administrativo</h2>
+
+  <nav class="admin-tabs">
+    <button [class.active]="tab() === 'orders'" (click)="setTab('orders')">Pedidos</button>
+    <button [class.active]="tab() === 'inventory'" (click)="setTab('inventory')">Inventario</button>
+    <button [class.active]="tab() === 'products'" (click)="setTab('products')">Productos</button>
+    <button [class.active]="tab() === 'users'" (click)="setTab('users')">Usuarios</button>
+  </nav>
+
+  @if (message()) {
+    <p class="admin-message">{{ message() }}</p>
+  }
+
+  <!-- ===== PEDIDOS (RF-24, RF-25, IU-20, IU-21) ===== -->
+  @if (tab() === 'orders') {
+    <section>
+      <div class="filters">
+        <select [(ngModel)]="filters.status">
+          <option value="">Todos los estados</option>
+          @for (e of estados(); track e) { <option [value]="e">{{ e }}</option> }
+        </select>
+        <input type="date" [(ngModel)]="filters.from" placeholder="Desde" />
+        <input type="date" [(ngModel)]="filters.to" placeholder="Hasta" />
+        <input type="text" [(ngModel)]="filters.customer" placeholder="Cliente" />
+        <input type="number" [(ngModel)]="filters.minTotal" placeholder="Monto min" />
+        <input type="number" [(ngModel)]="filters.maxTotal" placeholder="Monto max" />
+        <button class="btn" (click)="loadOrders()">Filtrar</button>
+      </div>
+
+      <table class="admin-table">
+        <thead>
+          <tr><th>#</th><th>Cliente</th><th>Correo</th><th>Total</th><th>Estado</th><th>Cambiar</th></tr>
+        </thead>
+        <tbody>
+          @for (o of orders(); track o.id) {
+            <tr>
+              <td>{{ o.id }}</td>
+              <td>{{ o.customerName }}</td>
+              <td>{{ o.userEmail }}</td>
+              <td>${{ o.total }}</td>
+              <td><span class="badge">{{ o.status }}</span></td>
+              <td>
+                <select [value]="o.status" (change)="changeStatus(o, $any($event.target).value)">
+                  @for (e of estados(); track e) { <option [value]="e">{{ e }}</option> }
+                </select>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
+
+  <!-- ===== INVENTARIO (RF-30, RF-31, IU-24, IU-25, IU-26) ===== -->
+  @if (tab() === 'inventory') {
+    <section>
+      @if (lowStockItems.length > 0) {
+        <div class="low-stock-alert">
+          ⚠️ Stock bajo: {{ lowStockItems.length }} producto(s) requieren reabastecimiento.
+        </div>
+      }
+      <table class="admin-table">
+        <thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Umbral</th><th>Acciones</th></tr></thead>
+        <tbody>
+          @for (i of inventory(); track i.id) {
+            <tr [class.low]="i.isLow">
+              <td>{{ i.name }}</td>
+              <td>{{ i.category }}</td>
+              <td>{{ i.stock }}</td>
+              <td>{{ i.lowStockThreshold }}</td>
+              <td>
+                <button class="btn small" (click)="startAdjust(i)">Ajustar</button>
+                <button class="btn small" (click)="editProduct(i)">Editar</button>
+                <button class="btn small danger" (click)="deleteProduct(i)">Eliminar</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (adjust.id) {
+        <div class="adjust-form">
+          <h4>Ajuste de inventario</h4>
+          <label>Cantidad nueva:
+            <input type="number" [(ngModel)]="adjust.newQty" min="0" />
+          </label>
+          <label>Razón del ajuste:
+            <input type="text" [(ngModel)]="adjust.reason" placeholder="Ej. merma, reabasto" />
+          </label>
+          <div class="row">
+            <button class="btn" (click)="saveAdjust()">Guardar</button>
+            <button class="btn danger" (click)="adjust = { id: 0, newQty: 0, reason: '' }">Cancelar</button>
+          </div>
+        </div>
+      }
+    </section>
+  }
+
+  <!-- ===== PRODUCTOS (RF-07, RF-08, RNF-08) ===== -->
+  @if (tab() === 'products') {
+    <section class="product-form">
+      <h4>{{ productForm.id ? 'Editar producto #' + productForm.id : 'Nuevo producto' }}</h4>
+      <label>Nombre: <input [(ngModel)]="productForm.name" /></label>
+      <label>Precio: <input type="number" [(ngModel)]="productForm.price" /></label>
+      <label>Imagen (URL o archivo): <input [(ngModel)]="productForm.imageUrl" /></label>
+      <label>Categoría: <input [(ngModel)]="productForm.category" /></label>
+      <label>Descripción: <textarea [(ngModel)]="productForm.description"></textarea></label>
+      <label>Stock: <input type="number" [(ngModel)]="productForm.stock" /></label>
+      <div class="row">
+        <button class="btn" (click)="saveProduct()">{{ productForm.id ? 'Actualizar' : 'Crear' }}</button>
+        <button class="btn danger" (click)="resetProductForm()">Limpiar</button>
+      </div>
+      <p class="hint">Para editar un producto existente, usa el botón "Editar" en la pestaña Inventario.</p>
+    </section>
+  }
+
+  <!-- ===== USUARIOS (RF-05, IU-05, IU-06) ===== -->
+  @if (tab() === 'users') {
+    <section>
+      <table class="admin-table">
+        <thead><tr><th>#</th><th>Nombre</th><th>Correo</th><th>Rol</th><th>Acción</th></tr></thead>
+        <tbody>
+          @for (u of users(); track u.id) {
+            <tr>
+              <td>{{ u.id }}</td>
+              <td>{{ u.name }}</td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.role }}</td>
+              <td><button class="btn small danger" (click)="askDeleteUser(u)">Eliminar</button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (userToDelete()) {
+        <div class="confirm-overlay">
+          <div class="confirm-box">
+            <p>¿Eliminar la cuenta de <strong>{{ userToDelete()!.email }}</strong>?</p>
+            <div class="row">
+              <button class="btn" (click)="userToDelete.set(null)">Cancelar</button>
+              <button class="btn danger" (click)="confirmDeleteUser()">Sí, eliminar</button>
+            </div>
+          </div>
+        </div>
+      }
+    </section>
+  }
+</div>

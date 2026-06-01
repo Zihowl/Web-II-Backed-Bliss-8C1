@@ -43,6 +43,12 @@ export class CartComponent {
   });
 
   total = computed(() => this.cartService.total());
+  // RF-17: desglose de subtotal (sin IVA), impuestos (IVA 16%) y total. Los precios
+  // del catalogo ya incluyen IVA, por eso lo separamos de forma inversa.
+  subtotalSinIva = computed(() => this.total() / 1.16);
+  iva = computed(() => this.total() - this.subtotalSinIva());
+  stockError = this.cartService.stockError;
+  showClearConfirm = signal(false);
   validationErrors = signal<string[]>([]);
   customer: CustomerData = {
     name: '',
@@ -85,17 +91,25 @@ export class CartComponent {
     this.cartService.eliminarLinea(id);
   }
 
-  clearCart() {
+  // RNF-12: solicita confirmacion antes de vaciar el carrito.
+  requestClear() {
+    if (this.items().length === 0) {
+      return;
+    }
+    this.showClearConfirm.set(true);
+  }
+
+  confirmClear() {
     this.cartService.vaciar();
+    this.showClearConfirm.set(false);
+  }
+
+  cancelClear() {
+    this.showClearConfirm.set(false);
   }
 
   closeCart() {
     this.cartService.closeCart();
-  }
-
-  exportXml() {
-    console.log('CartComponent.exportXml invoked');
-    this.cartService.exportarXML(this.customer);
   }
 
   exportOrder() {

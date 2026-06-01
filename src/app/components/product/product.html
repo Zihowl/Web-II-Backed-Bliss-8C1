@@ -20,13 +20,18 @@
       @if (product.inStock) { Disponible } @else { Agotado }
     </p>
 
-    <button class="btn" [class.btn-added]="recentlyAdded()" [disabled]="!product.inStock" (click)="onAdd()">
-      @if (recentlyAdded()) {
-        Agregado al carrito
-      } @else {
-        Agregar al carrito
-      }
-    </button>
+    <!-- IU-27: cuando no hay stock se reemplaza el boton por la etiqueta "Agotado" -->
+    @if (product.inStock) {
+      <button class="btn" [class.btn-added]="recentlyAdded()" (click)="onAdd()">
+        @if (recentlyAdded()) {
+          Agregado al carrito
+        } @else {
+          Agregar al carrito
+        }
+      </button>
+    } @else {
+      <span class="sold-out-label">Agotado</span>
+    }
   </div>
 </article>
 

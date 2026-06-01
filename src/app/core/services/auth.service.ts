@@ -40,7 +40,7 @@ export class AuthService {
                 this.logout();
                 return;
             }
-            this.currentUser.set({ id: payload.id, name: payload.name, email: payload.email });
+            this.currentUser.set({ id: payload.id, name: payload.name, email: payload.email, role: payload.role });
             this.isAuthenticated.set(true);
         }
 
@@ -73,6 +73,14 @@ export class AuthService {
     
     validateToken(): Observable<any> {
         return this.http.get(`${this.apiUrl}/validate`);
+    }
+
+    forgotPassword(email: string): Observable<any> {
+        return this.http.post(`${this.apiUrl}/forgot-password`, { email });
+    }
+
+    resetPassword(token: string, password: string): Observable<any> {
+        return this.http.post(`${this.apiUrl}/reset-password`, { token, password });
     }
     
     saveToken(token: string): void {

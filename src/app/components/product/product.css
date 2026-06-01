@@ -18,3 +18,15 @@
 .btn:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
 .btn.btn-added { background: #1f8d4d; box-shadow: 0 0 0 2px rgba(31, 141, 77, 0.2); }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* IU-27: etiqueta de producto agotado */
+.sold-out-label {
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+  padding: 10px;
+  background: #f0e6e6;
+  color: #a33;
+  font-weight: 700;
+  border-radius: 6px;
+}

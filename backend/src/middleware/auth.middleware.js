@@ -18,6 +18,16 @@ const verifyToken = (req, res, next) => {
   }
 };
 
+// Restringe el acceso a funciones administrativas. Debe usarse despues de
+// verifyToken, que coloca el rol del usuario en req.user.role.
+const requireAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ mensaje: 'Acceso restringido a administradores' });
+  }
+  next();
+};
+
 module.exports = {
-  verifyToken
+  verifyToken,
+  requireAdmin
 };

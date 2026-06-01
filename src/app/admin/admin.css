@@ -1,0 +1,116 @@
+.admin-page {
+  max-width: 1000px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.admin-tabs button {
+  padding: 8px 16px;
+  border: 1px solid #d9c7ad;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.admin-tabs button.active {
+  background: #b5651d;
+  color: #fff;
+  border-color: #b5651d;
+}
+.admin-message {
+  background: #eef7e8;
+  border: 1px solid #b6d49a;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+.filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.filters input, .filters select {
+  padding: 6px;
+  border: 1px solid #d9c7ad;
+  border-radius: 5px;
+}
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+.admin-table th, .admin-table td {
+  border: 1px solid #ece0cf;
+  padding: 8px;
+  text-align: left;
+  font-size: 0.9rem;
+}
+.admin-table tr.low { background: #fdecec; }
+.badge {
+  background: #f0e6d6;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+}
+.btn {
+  padding: 7px 14px;
+  background: #b5651d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn.small { padding: 4px 8px; font-size: 0.8rem; margin-right: 4px; }
+.btn.danger { background: #c0392b; }
+.row { display: flex; gap: 8px; margin-top: 10px; }
+.low-stock-alert {
+  background: #fff3cd;
+  border: 1px solid #ffe08a;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+.product-form, .adjust-form {
+  background: #fff;
+  border: 1px solid #ece0cf;
+  border-radius: 8px;
+  padding: 16px;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+.product-form label, .adjust-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  gap: 4px;
+}
+.product-form input, .product-form textarea,
+.adjust-form input {
+  padding: 7px;
+  border: 1px solid #d9c7ad;
+  border-radius: 5px;
+}
+.hint { font-size: 0.8rem; color: #888; }
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.confirm-box {
+  background: #fff;
+  padding: 24px;
+  border-radius: 10px;
+  max-width: 320px;
+  text-align: center;
+}

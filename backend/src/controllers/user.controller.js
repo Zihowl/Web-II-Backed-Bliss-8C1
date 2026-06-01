@@ -1,4 +1,7 @@
 const UserModel = require('../models/user.model');
+const OrderModel = require('../models/order.model');
+const emailService = require('../services/email.service');
+const { buildCfdiXml, parseCfdiXml } = require('../services/cfdi.service');
 
 const getProfile = async (req, res, next) => {
   try {
@@ -29,9 +32,71 @@ const updateProfile = async (req, res, next) => {
 
 const getOrderHistory = async (req, res, next) => {
   try {
-    const orders = await UserModel.getOrderHistory(req.user.id);
+    const rows = await UserModel.getOrderHistory(req.user.id);
+    // order_data es un CFDI (XML). Parseamos el total y los conceptos para que el
+    // frontend pueda mostrarlos sin volver a parsear el XML.
+    const orders = rows.map((row) => {
+      const xml = row.order_data;
+      const { total, items } = parseCfdiXml(xml);
+      return {
+        id: row.id,
+        created_at: row.created_at,
+        status: row.status,
+        order_xml: xml,
+        total,
+        items,
+      };
+    });
     res.json({ orders });
   } catch (error) {
+    next(error);
+  }
+};
+
+const saveOrder = async (req, res, next) => {
+  try {
+    const { order_data, customer, paypal_txn_id } = req.body;
+
+    if (!order_data || !Array.isArray(order_data) || order_data.length === 0) {
+      return res.status(400).json({ mensaje: 'El pedido no contiene productos' });
+    }
+
+    // Normalizamos cantidades y calculamos el total (subtotal ya incluye IVA).
+    const items = order_data.map((it) => ({
+      id: it.id,
+      name: it.name,
+      quantity: Number(it.quantity) || 1,
+      price: Number(it.price) || 0,
+    }));
+    const total = order_data.reduce(
+      (acc, it) => acc + (Number(it.subtotal) || Number(it.price) * (Number(it.quantity) || 1)),
+      0
+    );
+
+    // Generamos el CFDI 4.0 simulado (XML) a partir de los productos del pedido.
+    const orderXml = buildCfdiXml(order_data);
+
+    // Creacion atomica: valida y decrementa stock para evitar sobreventa (RNF-21).
+    const { order, lowStock } = await OrderModel.createOrderWithStock({
+      userId: req.user.id,
+      items,
+      orderXml,
+      total,
+      customer,
+      paypalTxnId: paypal_txn_id,
+    });
+
+    // Notificaciones (no bloquean la respuesta).
+    emailService.sendReceipt(req.user.email, { orderId: order.id, items, total });
+    if (lowStock.length > 0) {
+      emailService.sendLowStockAlert(lowStock);
+    }
+
+    res.status(201).json({ mensaje: 'Pedido guardado exitosamente', order });
+  } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({ mensaje: error.message });
+    }
     next(error);
   }
 };
@@ -39,5 +104,6 @@ const getOrderHistory = async (req, res, next) => {
 module.exports = {
   getProfile,
   updateProfile,
-  getOrderHistory
+  getOrderHistory,
+  saveOrder
 };

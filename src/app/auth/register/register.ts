@@ -21,6 +21,7 @@ export class Register {
   email = '';
   password = '';
   confirmPassword = '';
+  acceptedTerms = false;
   errorMessage = '';
   successMessage = '';
   fieldErrors = {
@@ -29,7 +30,8 @@ export class Register {
     address: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    terms: ''
   };
   loading = signal(false);
 
@@ -113,6 +115,12 @@ export class Register {
       isValid = false;
     }
 
+    // RNF-27: aceptacion obligatoria y explicita de terminos y condiciones.
+    if (!this.acceptedTerms) {
+      this.fieldErrors['terms'] = 'Debes aceptar los términos y condiciones';
+      isValid = false;
+    }
+
     return isValid;
   }
 
@@ -125,7 +133,8 @@ export class Register {
       address: '',
       email: '',
       password: '',
-      confirmPassword: ''
+      confirmPassword: '',
+      terms: ''
     };
   }
 }

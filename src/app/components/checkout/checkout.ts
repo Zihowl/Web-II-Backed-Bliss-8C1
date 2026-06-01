@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { CartService } from '../../services/cart.service';
 import { PaymentService, CreatePaypalOrderPayload } from '../../services/payment.service';
+import { OrderService } from '../../services/order.service';
+import { AuthService } from '../../core/services/auth.service';
 import { lastValueFrom } from 'rxjs';
-import { Inject } from '@angular/core';
 
 @Component({
   selector: 'app-checkout',
@@ -16,13 +17,24 @@ import { Inject } from '@angular/core';
 export class Checkout implements OnInit {
   loading = signal(false);
   success = signal(false);
+  orderId = signal<number | null>(null);
   error = signal('');
 
   private router = inject(Router);
 
-  constructor(private cartService: CartService, private paymentService: PaymentService) {}
+  constructor(
+    private cartService: CartService,
+    private paymentService: PaymentService,
+    private orderService: OrderService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.error.set('Debes iniciar sesión para completar tu compra.');
+      this.router.navigate(['/login']);
+      return;
+    }
     if (this.products.length === 0) {
       this.error.set('El carrito está vacío. Agrega productos antes de pagar.');
       return;
@@ -36,6 +48,15 @@ export class Checkout implements OnInit {
 
   get total() {
     return this.cartService.total();
+  }
+
+  // RF-17: desglose de costos (los precios ya incluyen IVA del 16%).
+  get subtotalSinIva() {
+    return this.total / 1.16;
+  }
+
+  get iva() {
+    return this.total - this.subtotalSinIva;
   }
 
   get itemCount() {
@@ -153,16 +174,33 @@ export class Checkout implements OnInit {
       onApprove: async (data: any) => {
         this.loading.set(true);
         try {
-          const capture = await lastValueFrom(this.paymentService.captureOrder(data.orderID));
-          // Exportar XML con datos del cliente y de PayPal
-          const customerData = this.cartService.getCustomerData();
-          const paypalData = { orderId: data.orderID, status: (capture as any)?.status || 'COMPLETED' };
-          this.cartService.exportarXML(customerData || undefined, paypalData);
-          // Limpiar carrito y navegar al home
+          await lastValueFrom(this.paymentService.captureOrder(data.orderID));
+          // Persistir el pedido en la base de datos (historial del usuario), con los
+          // datos del cliente y el id de transaccion de PayPal.
+          const orderItems = this.cartService.buildOrderItems();
+          const cd = this.cartService.getCustomerData();
+          const resp = await lastValueFrom(
+            this.orderService.saveOrder({
+              order_data: orderItems,
+              customer: cd
+                ? {
+                    name: cd.name,
+                    phone: cd.phone,
+                    address: cd.address,
+                    note: cd.note,
+                    deliveryType: cd.deliveryType,
+                    paymentType: cd.paymentType,
+                  }
+                : undefined,
+              paypal_txn_id: data.orderID,
+            })
+          );
+          // IU-18: confirmacion con el numero de orden asignado.
+          this.orderId.set(resp?.order?.id ?? null);
           this.cartService.vaciar();
-          this.router.navigate(['/']);
+          this.success.set(true);
         } catch (err: any) {
-          this.error.set('Error capturando pago: ' + (err?.message || err));
+          this.error.set('Error procesando el pedido: ' + (err?.message || err));
         } finally {
           this.loading.set(false);
         }

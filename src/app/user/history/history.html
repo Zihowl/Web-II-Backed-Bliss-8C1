@@ -42,6 +42,20 @@
               </div>
             </div>
 
+            <!-- IU-22: linea de tiempo visual (stepper) del estado del pedido -->
+            <div class="order-stepper">
+              @for (etapa of ESTADOS; track etapa; let i = $index) {
+                <div
+                  class="step"
+                  [class.done]="i <= stepIndex(order)"
+                  [class.current]="i === stepIndex(order)"
+                >
+                  <span class="step-dot">{{ i + 1 }}</span>
+                  <span class="step-label">{{ etapa }}</span>
+                </div>
+              }
+            </div>
+
             <div class="order-info-row">
               <div class="order-items-count">
                 <span class="label">{{ countItems(order) }}</span>

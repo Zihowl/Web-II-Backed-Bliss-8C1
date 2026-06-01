@@ -34,6 +34,7 @@ export class ProductsService {
       category: this.normalizeCategory(product.category || ''),
       description: this.normalizeDescription(product.description || ''),
       inStock: product.inStock ?? true,
+      stock: Number.isFinite(Number(product.stock)) ? Number(product.stock) : undefined,
     };
   }
 

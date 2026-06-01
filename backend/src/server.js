@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const app = require('./app');
 const { connectDB } = require('./config/db');
+const { runMigrations } = require('./config/migrate');
 const { validatePaypalConfig } = require('./config/paypal.config.ts');
 
 const PORT = Number(process.env.PORT || 3000);
@@ -12,6 +13,7 @@ const startServer = async () => {
     // Validar que las credenciales de PayPal estén definidas antes de iniciar
     validatePaypalConfig();
     await connectDB();
+    await runMigrations();
 
     app.listen(PORT, () => {
       console.log(`Servidor corriendo en http://localhost:${PORT}`);

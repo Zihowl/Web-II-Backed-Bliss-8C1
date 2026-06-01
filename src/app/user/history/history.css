@@ -491,3 +491,52 @@
     justify-content: center;
   }
 }
+/* IU-22: stepper de estado del pedido */
+.order-stepper {
+  display: flex;
+  justify-content: space-between;
+  margin: 14px 0;
+  gap: 4px;
+}
+.order-stepper .step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  color: #b0a290;
+}
+.order-stepper .step::before {
+  content: '';
+  position: absolute;
+  top: 13px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+  background: #e0d4c4;
+  z-index: 0;
+}
+.order-stepper .step:first-child::before { display: none; }
+.order-stepper .step.done { color: #7a5a2e; }
+.order-stepper .step.done::before { background: #b5651d; }
+.order-stepper .step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e0d4c4;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  z-index: 1;
+}
+.order-stepper .step.done .step-dot { background: #b5651d; }
+.order-stepper .step.current .step-dot {
+  box-shadow: 0 0 0 3px rgba(181, 101, 29, 0.3);
+}
+.order-stepper .step-label {
+  font-size: 0.72rem;
+  margin-top: 4px;
+}

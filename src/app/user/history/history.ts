@@ -1,12 +1,15 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { OrderService } from '../../services/order.service';
+import { AuthService } from '../../core/services/auth.service';
 
 interface Order {
   id: number;
-  order_data: string;
+  order_xml: string;
   total: number;
   created_at: string;
+  status?: string;
   items?: any[];
 }
 
@@ -17,13 +20,21 @@ interface Order {
   templateUrl: './history.html',
   styleUrl: './history.css',
 })
-export class History implements OnInit {
+export class History implements OnInit, OnDestroy {
   private http = inject(HttpClient);
+  private orderService = inject(OrderService);
+  private authService = inject(AuthService);
+
+  // RNF-16: etapas del pedido en orden para el stepper visual (IU-22).
+  readonly ESTADOS = ['Recibido', 'En preparación', 'En camino', 'Completado'];
 
   orders = signal<Order[]>([]);
   loading = signal(true);
   selectedOrder = signal<Order | null>(null);
   errorMessage = '';
+
+  // Conexiones SSE activas por pedido para limpiarlas al destruir el componente.
+  private streams = new Map<number, EventSource>();
 
   readonly CFDI_EMISOR = {
     rfc: 'BKBL000000000',
@@ -45,12 +56,21 @@ export class History implements OnInit {
     this.loadHistory();
   }
 
+  ngOnDestroy() {
+    // Cerramos todas las suscripciones SSE.
+    for (const es of this.streams.values()) {
+      es.close();
+    }
+    this.streams.clear();
+  }
+
   private loadHistory() {
     this.loading.set(true);
     this.http.get<any>('http://localhost:3000/api/user/history').subscribe({
       next: (res) => {
         this.orders.set(res.orders || []);
         this.loading.set(false);
+        this.subscribeToStatuses();
       },
       error: () => {
         this.errorMessage = 'Error al cargar el historial de pedidos';
@@ -58,6 +78,45 @@ export class History implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  // RF-26/RNF-19: abre un stream SSE por cada pedido no completado para reflejar los
+  // cambios de estado en tiempo real sin recargar.
+  private subscribeToStatuses() {
+    const token = this.authService.getToken();
+    if (!token) return;
+
+    for (const order of this.orders()) {
+      if (this.streams.has(order.id) || order.status === 'Completado') {
+        continue;
+      }
+      const es = this.orderService.streamStatus(order.id, token);
+      es.addEventListener('status', (ev: MessageEvent) => {
+        try {
+          const data = JSON.parse(ev.data);
+          this.orders.update((list) =>
+            list.map((o) => (o.id === order.id ? { ...o, status: data.status } : o))
+          );
+          if (data.status === 'Completado') {
+            es.close();
+            this.streams.delete(order.id);
+          }
+        } catch {
+          // Ignoramos mensajes mal formados.
+        }
+      });
+      es.onerror = () => {
+        es.close();
+        this.streams.delete(order.id);
+      };
+      this.streams.set(order.id, es);
+    }
+  }
+
+  // Indice de la etapa actual para pintar el stepper (IU-22).
+  stepIndex(order: Order): number {
+    const idx = this.ESTADOS.indexOf(order.status || 'Recibido');
+    return idx < 0 ? 0 : idx;
   }
 
   openInvoice(order: Order) {
@@ -99,14 +158,8 @@ export class History implements OnInit {
   }
 
   getOrderItems(order: Order): any[] {
-    try {
-      if (typeof order.order_data === 'string') {
-        return JSON.parse(order.order_data);
-      }
-      return order.order_data || [];
-    } catch {
-      return [];
-    }
+    // El backend parsea el CFDI (XML) y devuelve los conceptos ya como items.
+    return order.items || [];
   }
 
   getSubtotal(total: number): number {

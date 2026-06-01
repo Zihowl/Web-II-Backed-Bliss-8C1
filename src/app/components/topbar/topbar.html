@@ -81,6 +81,15 @@
                     </svg>
                     Historial de pedidos
                   </a>
+                  @if (currentUser()?.role === 'admin') {
+                    <a routerLink="/admin" class="dropdown-item">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3h18v4H3z"></path>
+                        <path d="M3 10h18v11H3z"></path>
+                      </svg>
+                      Panel admin
+                    </a>
+                  }
                 </nav>
                 <div class="dropdown-divider"></div>
                 <button type="button" class="dropdown-item logout-btn" (click)="logOut()">

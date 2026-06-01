@@ -102,6 +102,18 @@
         }
       </div>
 
+      <!-- RNF-27 / IU-30: aceptacion explicita de terminos y condiciones -->
+      <div class="form-group terms-group">
+        <label class="terms-label">
+          <input type="checkbox" name="terms" [(ngModel)]="acceptedTerms" />
+          Acepto los
+          <a routerLink="/terminos" target="_blank" class="link">términos y condiciones</a>
+        </label>
+        @if (fieldErrors['terms']) {
+          <span class="field-error">{{ fieldErrors['terms'] }}</span>
+        }
+      </div>
+
       @if (errorMessage) {
         <div class="error-message">{{ errorMessage }}</div>
       }

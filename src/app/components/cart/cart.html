@@ -66,10 +66,34 @@
     </div>
   }
 
-  <p class="total">TOTAL: ${{ total().toFixed(2) }} <small>IVA incluido</small></p>
+  @if (stockError()) {
+    <div class="validation-errors" role="alert" aria-live="polite">
+      <p>{{ stockError() }}</p>
+    </div>
+  }
+
+  <!-- RF-17: desglose de costos -->
+  <div class="cost-breakdown">
+    <p><span>Subtotal:</span> <span>${{ subtotalSinIva().toFixed(2) }}</span></p>
+    <p><span>IVA (16%):</span> <span>${{ iva().toFixed(2) }}</span></p>
+    <p class="total"><span>TOTAL:</span> <span>${{ total().toFixed(2) }} MXN</span></p>
+  </div>
 
   <div class="actions">
-    <button class="btn danger" type="button" (click)="clearCart()">Vaciar el carrito :c</button>
+    <button class="btn danger" type="button" (click)="requestClear()">Vaciar el carrito :c</button>
     <button class="btn" type="button" (click)="exportOrder()">Ir a pagar</button>
   </div>
+
+  <!-- RNF-12: confirmacion antes de vaciar -->
+  @if (showClearConfirm()) {
+    <div class="confirm-overlay" role="dialog" aria-modal="true">
+      <div class="confirm-box">
+        <p>¿Seguro que deseas vaciar el carrito?</p>
+        <div class="confirm-actions">
+          <button class="btn" type="button" (click)="cancelClear()">Cancelar</button>
+          <button class="btn danger" type="button" (click)="confirmClear()">Sí, vaciar</button>
+        </div>
+      </div>
+    </div>
+  }
 </aside>

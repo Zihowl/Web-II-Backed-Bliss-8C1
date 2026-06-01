@@ -38,22 +38,26 @@
 	<div *ngIf="products.length > 0" class="totals">
 		<div class="totals-row">
 			<span>Subtotal</span>
-			<span>${{ total.toFixed(2) }}</span>
+			<span>${{ subtotalSinIva.toFixed(2) }}</span>
 		</div>
 		<div class="totals-row muted">
-			<span>Envío</span>
-			<span>A calcular</span>
+			<span>IVA (16%)</span>
+			<span>${{ iva.toFixed(2) }}</span>
 		</div>
 		<div class="totals-row total">
 			<span>Total</span>
-			<span>${{ total.toFixed(2) }} <small>IVA incluido</small></span>
+			<span>${{ total.toFixed(2) }} MXN</span>
 		</div>
 	</div>
 
-	<div id="paypal-button-container" class="paypal-container"></div>
+	<div *ngIf="!success()" id="paypal-button-container" class="paypal-container"></div>
 
 	<div *ngIf="loading()" class="status">Procesando...</div>
-	<div *ngIf="success()" class="status success">Pago realizado con éxito. Gracias.</div>
+	<div *ngIf="success()" class="status success">
+		<p>¡Pago realizado con éxito! Gracias por tu compra.</p>
+		<p *ngIf="orderId()">Tu número de orden es <strong>#{{ orderId() }}</strong>.</p>
+		<a class="empty-cta" routerLink="/history">Ver el estado de mi pedido</a>
+	</div>
 	<div *ngIf="error()" class="status error">{{ error() }}</div>
 	</article>
 </div>
