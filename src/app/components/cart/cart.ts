@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CartService, CustomerData } from '../../services/cart.service';
 import { Product } from '../../models/product.model';
@@ -14,10 +14,11 @@ type CartLine = Product & { quantity: number; subtotal: number };
   styleUrls: ['./cart.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CartComponent {
+export class CartComponent implements OnDestroy {
   private cartService = inject(CartService);
   private router = inject(Router);
   private authService = inject(AuthService);
+  private stockNoteTimeout: ReturnType<typeof setTimeout> | null = null;
 
   items: Signal<Product[]>;
   isOpen: Signal<boolean>;
@@ -48,6 +49,7 @@ export class CartComponent {
   subtotalSinIva = computed(() => this.total() / 1.16);
   iva = computed(() => this.total() - this.subtotalSinIva());
   stockError = this.cartService.stockError;
+  stockBlockedId = this.cartService.stockBlockedId;
   showClearConfirm = signal(false);
   validationErrors = signal<string[]>([]);
   customer: CustomerData = {
@@ -72,6 +74,12 @@ export class CartComponent {
     });
   }
 
+  ngOnDestroy(): void {
+    if (this.stockNoteTimeout) {
+      clearTimeout(this.stockNoteTimeout);
+    }
+  }
+
   private prefillNameFromAuth(): void {
     const user = this.authService.currentUser();
     if (user?.name) {
@@ -84,7 +92,17 @@ export class CartComponent {
   }
 
   increaseQuantity(id: number) {
-    this.cartService.incrementarCantidad(id);
+    const ok = this.cartService.incrementarCantidad(id);
+    if (!ok) {
+      // El aviso de stock no debe quedar persistente: lo descartamos solo.
+      if (this.stockNoteTimeout) {
+        clearTimeout(this.stockNoteTimeout);
+      }
+      this.stockNoteTimeout = setTimeout(() => {
+        this.cartService.clearStockError();
+        this.stockNoteTimeout = null;
+      }, 2500);
+    }
   }
 
   removeItem(id: number) {

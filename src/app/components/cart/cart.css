@@ -1,3 +1,7 @@
+:host {
+  display: contents;
+}
+
 .cart-backdrop {
   position: fixed;
   inset: 0;
@@ -136,8 +140,24 @@
   cursor: pointer;
 }
 
+/* Boton "x" para eliminar la linea: discreto y acorde a la paleta. Anclado arriba
+   para que no se desplace cuando aparece el aviso de stock. */
 .item button.remove-line {
-  background: #f8d1d1;
+  align-self: start;
+  margin-top: 2px;
+  border: 0;
+  background: transparent;
+  color: #9a7b5a;
+  border-radius: 50%;
+  font-weight: 600;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.item button.remove-line:hover,
+.item button.remove-line:focus-visible {
+  background: #f6e3dd;
+  color: #b4503b;
+  outline: none;
 }
 
 .cart-form {
@@ -191,6 +211,14 @@
 .validation-errors ul {
   margin: 0;
   padding-left: 18px;
+}
+
+/* Aviso discreto de stock, por linea de producto (sin caja ni borde). */
+.stock-note {
+  margin: 4px 0;
+  font-size: 12px;
+  line-height: 1.3;
+  color: #9a5b4a;
 }
 
 .total {

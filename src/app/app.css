@@ -12,12 +12,14 @@ router-outlet {
   display: none;
 }
 
-.container > *:not(.site-footer) {
-  flex: 1 0 auto;
-}
-
+.container > app-topbar,
+.container > router-outlet,
 .container > .site-footer {
   flex: 0 0 auto;
+}
+
+.container > *:not(app-topbar):not(router-outlet):not(.site-footer) {
+  flex: 1 0 auto;
 }
 
 .site-footer {

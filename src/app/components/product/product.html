@@ -17,7 +17,14 @@
     <p class="desc">{{ descriptionWithoutPortions }}</p>
 
     <p class="stock" [class.out]="!product.inStock">
-      @if (product.inStock) { Disponible } @else { Agotado }
+      @if (product.inStock) {
+        @if (stockRestante !== null) {
+          <span class="stock-count">{{ stockRestante }} en stock</span>
+        }
+        <span class="stock-status">Disponible</span>
+      } @else {
+        <span class="stock-status">Agotado</span>
+      }
     </p>
 
     <!-- IU-27: cuando no hay stock se reemplaza el boton por la etiqueta "Agotado" -->
@@ -29,6 +36,9 @@
           Agregar al carrito
         }
       </button>
+      @if (stockBlocked()) {
+        <p class="stock-note" role="alert" aria-live="polite">ⓘ {{ stockBlocked() }}</p>
+      }
     } @else {
       <span class="sold-out-label">Agotado</span>
     }

@@ -297,6 +297,13 @@
   animation: fadeIn 0.25s ease;
 }
 
+.stock-note {
+  margin: 0;
+  font-size: 13px;
+  color: #9a5b4a;
+  animation: fadeIn 0.25s ease;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }

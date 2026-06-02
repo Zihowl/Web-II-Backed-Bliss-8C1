@@ -23,7 +23,13 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   error = signal('');
   quantity = signal(1);
   addedFeedback = signal(false);
+  stockBlocked = signal<string | null>(null);
   relatedProducts = signal<Product[]>([]);
+
+  stockRestante = computed(() => {
+    const p = this.product();
+    return p ? this.cartService.stockRestante(p) : null;
+  });
 
   portions = computed(() => {
     const desc = this.product()?.description ?? '';
@@ -108,20 +114,38 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     const currentProduct = this.product();
     if (!currentProduct) return;
     const n = this.quantity();
+    let agregados = 0;
     for (let i = 0; i < n; i++) {
-      this.cartService.agregar(currentProduct);
+      if (this.cartService.agregar(currentProduct)) {
+        agregados++;
+      }
     }
 
-    this.addedFeedback.set(true);
     if (this.feedbackTimeout) clearTimeout(this.feedbackTimeout);
+
+    if (agregados === n) {
+      // Todas las unidades solicitadas se agregaron.
+      this.stockBlocked.set(null);
+      this.addedFeedback.set(true);
+    } else {
+      // El stock impidio agregar todas (o ninguna) las unidades solicitadas.
+      this.addedFeedback.set(false);
+      this.stockBlocked.set(
+        agregados > 0
+          ? `Solo se agregaron ${agregados} de ${n} por stock disponible.`
+          : (this.cartService.stockError() ?? 'No hay stock disponible.')
+      );
+    }
+
     this.feedbackTimeout = setTimeout(() => {
       this.addedFeedback.set(false);
+      this.stockBlocked.set(null);
       this.feedbackTimeout = null;
-    }, 2000);
+    }, 2500);
   }
 
-  addRelatedToCart(product: Product): void {
-    this.cartService.agregar(product);
+  addRelatedToCart(_product: Product): void {
+    // La tarjeta de producto relacionado ya agrega al carrito y maneja su feedback.
   }
 
   onImageError(event: Event): void {

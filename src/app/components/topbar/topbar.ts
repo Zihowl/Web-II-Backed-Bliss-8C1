@@ -24,6 +24,7 @@ export class TopbarComponent {
   isAuthenticated = this.authService.isAuthenticated;
   currentUser = this.authService.currentUser;
   isMinimal = signal(this.computeMinimal(this.router.url));
+  hideShop = signal(this.computeHideShop(this.router.url));
   dropdownOpen = signal(false);
 
   constructor() {
@@ -31,6 +32,7 @@ export class TopbarComponent {
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe(e => {
         this.isMinimal.set(this.computeMinimal(e.urlAfterRedirects));
+        this.hideShop.set(this.computeHideShop(e.urlAfterRedirects));
         this.closeDropdown();
       });
   }
@@ -42,6 +44,11 @@ export class TopbarComponent {
   private computeMinimal(url: string): boolean {
     const path = url.split('?')[0].split('#')[0];
     return path === '/checkout' || path === '/terminos' || path === '/privacidad';
+  }
+
+  private computeHideShop(url: string): boolean {
+    const path = url.split('?')[0].split('#')[0];
+    return path === '/admin';
   }
 
   countItems() {

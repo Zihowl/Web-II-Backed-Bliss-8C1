@@ -38,7 +38,12 @@
 
           <div class="badges">
             <span class="badge badge--stock" [class.out]="!p.inStock">
-              @if (p.inStock) { Disponible } @else { Agotado }
+              @if (p.inStock) {
+                Disponible
+                @if (stockRestante() !== null) {
+                  · {{ stockRestante() }} en stock
+                }
+              } @else { Agotado }
             </span>
             @if (portions()) {
               <span class="badge badge--info">{{ portions() }}</span>
@@ -72,6 +77,9 @@
 
           @if (addedFeedback()) {
             <p class="added-feedback">Agregado al carrito ✓</p>
+          }
+          @if (stockBlocked()) {
+            <p class="stock-note" role="alert" aria-live="polite">ⓘ {{ stockBlocked() }}</p>
           }
         </div>
       </article>

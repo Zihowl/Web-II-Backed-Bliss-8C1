@@ -23,12 +23,16 @@ export class CartService {
   private customerDataSignal = signal<CustomerData | null>(null);
   // Ultimo mensaje de error de stock para mostrar feedback en la UI (RNF-11).
   private stockErrorSignal = signal<string | null>(null);
+  // Id del producto cuyo limite de stock se alcanzo, para mostrar el aviso solo en
+  // la linea correspondiente del carrito.
+  private stockBlockedIdSignal = signal<number | null>(null);
 
   // Expose readonly signals
   products = this.productsSignal.asReadonly();
   isCartOpen = this.isCartOpenSignal.asReadonly();
   customerData = this.customerDataSignal.asReadonly();
   stockError = this.stockErrorSignal.asReadonly();
+  stockBlockedId = this.stockBlockedIdSignal.asReadonly();
 
   constructor() {
     // RF-16: persistimos el carrito en localStorage para conservar su estado tras
@@ -53,8 +57,17 @@ export class CartService {
   }
 
   // Devuelve cuantas unidades de un producto hay actualmente en el carrito.
-  private cantidadEnCarrito(id: number): number {
+  cantidadEnCarrito(id: number): number {
     return this.productsSignal().filter(p => p.id === id).length;
+  }
+
+  // Unidades que aun se pueden agregar de un producto segun su stock. Devuelve null
+  // cuando el producto no tiene dato de stock numerico.
+  stockRestante(product: Product): number | null {
+    if (typeof product.stock !== 'number') {
+      return null;
+    }
+    return Math.max(0, product.stock - this.cantidadEnCarrito(product.id));
   }
 
   // RNF-11: valida contra el stock disponible antes de añadir una unidad mas.
@@ -66,6 +79,7 @@ export class CartService {
       this.stockErrorSignal.set(
         `Solo hay ${product.stock} unidad(es) disponibles de "${product.name}".`
       );
+      this.stockBlockedIdSignal.set(product.id);
       return false;
     }
     return true;
@@ -73,17 +87,22 @@ export class CartService {
 
   clearStockError() {
     this.stockErrorSignal.set(null);
+    this.stockBlockedIdSignal.set(null);
   }
 
-  agregar(product: Product) {
+  // Devuelve true si el producto se agrego, false si el stock lo impidio.
+  agregar(product: Product): boolean {
     if (!this.puedeAgregar(product)) {
-      return;
+      return false;
     }
-    this.stockErrorSignal.set(null);
+    this.clearStockError();
     this.productsSignal.update(lista => [...lista, product]);
+    return true;
   }
 
   quitar(id: number) {
+    // Al quitar una unidad se libera stock; descartamos cualquier aviso previo.
+    this.clearStockError();
     this.productsSignal.update(lista => {
       const index = lista.findIndex(p => p.id === id);
       if (index === -1) {
@@ -94,13 +113,13 @@ export class CartService {
     });
   }
 
-  incrementarCantidad(id: number) {
+  incrementarCantidad(id: number): boolean {
     const product = this.productsSignal().find(p => p.id === id);
     if (!product) {
-      return;
+      return false;
     }
 
-    this.agregar(product);
+    return this.agregar(product);
   }
 
   decrementarCantidad(id: number) {

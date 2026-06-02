@@ -1,7 +1,13 @@
+:host {
+  display: block;
+  background: #f4dcb3;
+  color: #3d2500;
+  font-family: 'EB Garamond', serif;
+}
 .admin-page {
   max-width: 1000px;
-  margin: 24px auto;
-  padding: 0 16px;
+  margin: 0 auto;
+  padding: 24px 16px;
 }
 .admin-tabs {
   display: flex;

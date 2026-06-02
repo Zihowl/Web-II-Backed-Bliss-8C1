@@ -11,6 +11,7 @@
         <h1>Backed Bliss</h1>
       </a>
       <div class="topbar-actions">
+        @if (!hideShop()) {
         <div class="search-control">
           <input
             #searchInput
@@ -47,6 +48,7 @@
           </svg>
           <span class="cart-count">{{ countItems() }}</span>
         </button>
+        }
         <div class="profile-container">
           <button type="button" class="icon-button" (click)="handleProfileClick()" aria-label="{{ isAuthenticated() ? 'Mi Perfil' : 'Ingresar' }}" [attr.aria-expanded]="dropdownOpen()">
             @if (isAuthenticated()) {

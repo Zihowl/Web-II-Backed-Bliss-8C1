@@ -3,7 +3,6 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { inject, PLATFORM_ID } from '@angular/core';
 import { Product } from '../../models/product.model';
 import { ProductsService } from '../../services/product.service';
-import { CartService } from '../../services/cart.service';
 import { SearchService } from '../../services/search.service';
 import { ProductCardComponent } from '../product/product';
 import { FilterMenuComponent, FilterKey } from '../filter-menu/filter-menu';
@@ -19,7 +18,6 @@ import { CarouselComponent } from '../carousel/carousel';
 export class CatalogComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly productsService = inject(ProductsService);
-  private readonly cartService = inject(CartService);
   private readonly searchService = inject(SearchService);
   products = signal<Product[]>([]);
   selectedFilter = signal<FilterKey>('todos');
@@ -62,8 +60,9 @@ export class CatalogComponent implements OnInit {
     });
   }
 
-  addToCart(product: Product) {
-    this.cartService.agregar(product);
+  addToCart(_product: Product) {
+    // La tarjeta (ProductCardComponent) ya agrega el producto al carrito y maneja el
+    // feedback de stock; este handler se conserva por compatibilidad del @Output.
   }
 
   onFilterChange(filter: FilterKey) {
