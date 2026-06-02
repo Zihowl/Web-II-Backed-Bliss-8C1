@@ -30,7 +30,7 @@
 
       <table class="admin-table">
         <thead>
-          <tr><th>#</th><th>Cliente</th><th>Correo</th><th>Total</th><th>Estado</th><th>Cambiar</th></tr>
+          <tr><th>#</th><th>Cliente</th><th>Correo</th><th>Total</th><th>Estado del pago</th></tr>
         </thead>
         <tbody>
           @for (o of orders(); track o.id) {
@@ -40,11 +40,6 @@
               <td>{{ o.userEmail }}</td>
               <td>${{ o.total }}</td>
               <td><span class="badge">{{ o.status }}</span></td>
-              <td>
-                <select [value]="o.status" (change)="changeStatus(o, $any($event.target).value)">
-                  @for (e of estados(); track e) { <option [value]="e">{{ e }}</option> }
-                </select>
-              </td>
             </tr>
           }
         </tbody>
@@ -80,17 +75,16 @@
       </table>
 
       @if (adjust.id) {
-        <div class="adjust-form">
-          <h4>Ajuste de inventario</h4>
-          <label>Cantidad nueva:
-            <input type="number" [(ngModel)]="adjust.newQty" min="0" />
-          </label>
-          <label>Razón del ajuste:
-            <input type="text" [(ngModel)]="adjust.reason" placeholder="Ej. merma, reabasto" />
-          </label>
-          <div class="row">
-            <button class="btn" (click)="saveAdjust()">Guardar</button>
-            <button class="btn danger" (click)="adjust = { id: 0, newQty: 0, reason: '' }">Cancelar</button>
+        <div class="adjust-overlay" (click)="adjust = { id: 0, newQty: 0, reason: '' }">
+          <div class="adjust-box" (click)="$event.stopPropagation()">
+            <h4>Ajuste de inventario</h4>
+            <label>Cantidad nueva:
+              <input type="number" [(ngModel)]="adjust.newQty" min="0" />
+            </label>
+            <div class="row">
+              <button class="btn" (click)="saveAdjust()">Guardar</button>
+              <button class="btn danger" (click)="adjust = { id: 0, newQty: 0, reason: '' }">Cancelar</button>
+            </div>
           </div>
         </div>
       }
@@ -103,7 +97,15 @@
       <h4>{{ productForm.id ? 'Editar producto #' + productForm.id : 'Nuevo producto' }}</h4>
       <label>Nombre: <input [(ngModel)]="productForm.name" /></label>
       <label>Precio: <input type="number" [(ngModel)]="productForm.price" /></label>
-      <label>Imagen (URL o archivo): <input [(ngModel)]="productForm.imageUrl" /></label>
+      <label>Imagen:
+        <input type="file" accept="image/*" (change)="onImageSelected($event)" />
+      </label>
+      @if (uploading()) {
+        <p class="hint">Subiendo imagen...</p>
+      }
+      @if (previewUrl()) {
+        <img class="img-preview" [src]="previewUrl()" alt="Vista previa" />
+      }
       <label>Categoría: <input [(ngModel)]="productForm.category" /></label>
       <label>Descripción: <textarea [(ngModel)]="productForm.description"></textarea></label>
       <label>Stock: <input type="number" [(ngModel)]="productForm.stock" /></label>

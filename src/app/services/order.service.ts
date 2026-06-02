@@ -25,6 +25,8 @@ export interface SaveOrderPayload {
   order_data: OrderItem[];
   customer?: OrderCustomer;
   paypal_txn_id?: string;
+  // Estado del pago detectado desde PayPal: 'Pagado' | 'Error de Pago' | 'Cancelado'.
+  payment_status?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -48,11 +50,5 @@ export class OrderService {
 
   saveOrder(payload: SaveOrderPayload): Observable<any> {
     return this.http.post<any>(`${this.base}/history`, payload);
-  }
-
-  // RF-26/RNF-19: stream SSE del estado de un pedido. El token va por query string
-  // porque EventSource no permite cabeceras de autorizacion.
-  streamStatus(orderId: number, token: string): EventSource {
-    return new EventSource(`${this.apiRoot}/orders/${orderId}/stream?token=${token}`);
   }
 }

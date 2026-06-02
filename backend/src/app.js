@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const productsRoutes = require('./routes/products.routes');
 const paypalRoutes = require('./routes/paypal.routes');
@@ -13,6 +14,9 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Imagenes de productos subidas por el admin.
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.get('/', (req, res) => {
   res.json({

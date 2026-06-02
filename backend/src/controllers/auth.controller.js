@@ -1,10 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const UserModel = require('../models/user.model');
-const emailService = require('../services/email.service');
-
-const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
 // Registro
 const register = async (req, res, next) => {
@@ -91,54 +87,8 @@ const validate = async (req, res, next) => {
   }
 };
 
-// Solicitud de recuperacion de contrasenia (RF-03, RNF-04). Responde igual exista o
-// no el correo para no filtrar cuentas registradas.
-const forgotPassword = async (req, res, next) => {
-  try {
-    const { email } = req.body;
-    const user = await UserModel.findByEmail(email);
-
-    if (user) {
-      const token = crypto.randomBytes(32).toString('hex');
-      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutos
-      await UserModel.createResetToken(user.id, hashToken(token), expiresAt);
-      emailService.sendPasswordReset(user.email, { token });
-    }
-
-    res.json({
-      mensaje: 'Si el correo esta registrado, recibiras un enlace de recuperacion.',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Cambio de contrasenia mediante token (RNF-04).
-const resetPassword = async (req, res, next) => {
-  try {
-    const { token, password } = req.body;
-    if (!token || !password) {
-      return res.status(400).json({ mensaje: 'Token y contraseña son obligatorios' });
-    }
-
-    const record = await UserModel.findValidResetToken(hashToken(token));
-    if (!record) {
-      return res.status(400).json({ mensaje: 'El enlace es invalido o ha expirado' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await UserModel.consumeResetToken(record.id, record.user_id, hashedPassword);
-
-    res.json({ mensaje: 'Contraseña actualizada exitosamente' });
-  } catch (error) {
-    next(error);
-  }
-};
-
 module.exports = {
   register,
   login,
-  validate,
-  forgotPassword,
-  resetPassword
+  validate
 };

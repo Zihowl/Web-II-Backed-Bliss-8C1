@@ -106,6 +106,35 @@ export class Checkout implements OnInit {
     } as CreatePaypalOrderPayload;
   }
 
+  // Persiste el pedido en el historial con el estado del pago detectado. Para estados
+  // distintos de 'Pagado' el backend no descuenta stock. Devuelve la respuesta o null si
+  // falla el guardado (no interrumpimos el flujo de PayPal por un fallo de registro).
+  private async persistOrder(paymentStatus: string, paypalTxnId?: string): Promise<any> {
+    try {
+      const orderItems = this.cartService.buildOrderItems();
+      const cd = this.cartService.getCustomerData();
+      return await lastValueFrom(
+        this.orderService.saveOrder({
+          order_data: orderItems,
+          customer: cd
+            ? {
+                name: cd.name,
+                phone: cd.phone,
+                address: cd.address,
+                note: cd.note,
+                deliveryType: cd.deliveryType,
+                paymentType: cd.paymentType,
+              }
+            : undefined,
+          paypal_txn_id: paypalTxnId,
+          payment_status: paymentStatus,
+        })
+      );
+    } catch {
+      return null;
+    }
+  }
+
   private async loadPayPal() {
     try {
       const { clientId } = await lastValueFrom(this.paymentService.getClientId());
@@ -174,38 +203,35 @@ export class Checkout implements OnInit {
       onApprove: async (data: any) => {
         this.loading.set(true);
         try {
-          await lastValueFrom(this.paymentService.captureOrder(data.orderID));
-          // Persistir el pedido en la base de datos (historial del usuario), con los
-          // datos del cliente y el id de transaccion de PayPal.
-          const orderItems = this.cartService.buildOrderItems();
-          const cd = this.cartService.getCustomerData();
-          const resp = await lastValueFrom(
-            this.orderService.saveOrder({
-              order_data: orderItems,
-              customer: cd
-                ? {
-                    name: cd.name,
-                    phone: cd.phone,
-                    address: cd.address,
-                    note: cd.note,
-                    deliveryType: cd.deliveryType,
-                    paymentType: cd.paymentType,
-                  }
-                : undefined,
-              paypal_txn_id: data.orderID,
-            })
-          );
-          // IU-18: confirmacion con el numero de orden asignado.
-          this.orderId.set(resp?.order?.id ?? null);
-          this.cartService.vaciar();
-          this.success.set(true);
+          const capture = await lastValueFrom(this.paymentService.captureOrder(data.orderID));
+          // El estado del pago se detecta del resultado de captura de PayPal.
+          const paymentStatus = capture?.status === 'COMPLETED' ? 'Pagado' : 'Error de Pago';
+          const resp = await this.persistOrder(paymentStatus, data.orderID);
+
+          if (paymentStatus === 'Pagado') {
+            // IU-18: confirmacion con el numero de orden asignado.
+            this.orderId.set(resp?.order?.id ?? null);
+            this.cartService.vaciar();
+            this.success.set(true);
+          } else {
+            this.error.set('El pago no se completó. El pedido quedó registrado como Error de Pago.');
+          }
         } catch (err: any) {
-          this.error.set('Error procesando el pedido: ' + (err?.message || err));
+          // Falla la captura: registramos el intento como Error de Pago.
+          await this.persistOrder('Error de Pago', data?.orderID);
+          this.error.set('Error procesando el pago: ' + (err?.message || err));
         } finally {
           this.loading.set(false);
         }
       },
-      onError: (err: any) => {
+      onCancel: async (data: any) => {
+        // El usuario cerró/canceló el pago en PayPal.
+        await this.persistOrder('Cancelado', data?.orderID);
+        this.error.set('Cancelaste el pago. El pedido quedó registrado como Cancelado.');
+      },
+      onError: async (err: any) => {
+        // Error del SDK de PayPal: registramos el intento como Error de Pago.
+        await this.persistOrder('Error de Pago');
         this.error.set('Error PayPal: ' + JSON.stringify(err));
       },
     }).render('#paypal-button-container');

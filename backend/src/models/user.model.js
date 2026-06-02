@@ -70,42 +70,6 @@ const resetFailedAttempts = async (id) => {
   await db.query('UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = $1', [id]);
 };
 
-// --- Recuperacion de contrasenia (RF-03, RNF-04) ---
-
-const createResetToken = async (userId, tokenHash, expiresAt) => {
-  await db.query(
-    `INSERT INTO password_reset_token (user_id, token_hash, expires_at) VALUES ($1, $2, $3)`,
-    [userId, tokenHash, expiresAt]
-  );
-};
-
-const findValidResetToken = async (tokenHash) => {
-  const result = await db.query(
-    `SELECT id, user_id FROM password_reset_token
-     WHERE token_hash = $1 AND used = FALSE AND expires_at > CURRENT_TIMESTAMP`,
-    [tokenHash]
-  );
-  return result.rows[0];
-};
-
-const consumeResetToken = async (id, userId, hashedPassword) => {
-  const client = await db.pool.connect();
-  try {
-    await client.query('BEGIN');
-    await client.query('UPDATE password_reset_token SET used = TRUE WHERE id = $1', [id]);
-    await client.query(
-      'UPDATE users SET password = $1, failed_attempts = 0, locked_until = NULL WHERE id = $2',
-      [hashedPassword, userId]
-    );
-    await client.query('COMMIT');
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
-};
-
 // --- Administracion de usuarios (RF-05) ---
 
 const listUsers = async () => {
@@ -129,9 +93,6 @@ module.exports = {
   getOrderHistory,
   registerFailedAttempt,
   resetFailedAttempts,
-  createResetToken,
-  findValidResetToken,
-  consumeResetToken,
   listUsers,
   deleteUser
 };

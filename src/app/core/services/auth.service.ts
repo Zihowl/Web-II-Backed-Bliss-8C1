@@ -75,14 +75,6 @@ export class AuthService {
         return this.http.get(`${this.apiUrl}/validate`);
     }
 
-    forgotPassword(email: string): Observable<any> {
-        return this.http.post(`${this.apiUrl}/forgot-password`, { email });
-    }
-
-    resetPassword(token: string, password: string): Observable<any> {
-        return this.http.post(`${this.apiUrl}/reset-password`, { token, password });
-    }
-    
     saveToken(token: string): void {
         if (isPlatformBrowser(this.platformId)) {
             localStorage.setItem('token', token);

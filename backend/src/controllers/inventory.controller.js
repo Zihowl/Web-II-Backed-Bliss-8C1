@@ -1,5 +1,4 @@
 const InventoryModel = require('../models/inventory.model');
-const emailService = require('../services/email.service');
 const db = require('../config/db');
 
 // Listado de inventario para el panel administrativo (IU-24).
@@ -36,11 +35,6 @@ const adjustStock = async (req, res, next) => {
     }
 
     const product = await InventoryModel.adjustStock(productId, newQty, reason, req.user.id);
-
-    // Si el ajuste deja el producto en stock bajo, avisamos al administrador (RNF-22).
-    if (product.stock <= product.lowStockThreshold) {
-      emailService.sendLowStockAlert([product]);
-    }
 
     res.json({ mensaje: 'Inventario actualizado', product });
   } catch (error) {

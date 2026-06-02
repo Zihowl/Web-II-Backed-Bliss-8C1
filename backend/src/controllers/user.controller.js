@@ -1,6 +1,5 @@
 const UserModel = require('../models/user.model');
 const OrderModel = require('../models/order.model');
-const emailService = require('../services/email.service');
 const { buildCfdiXml, parseCfdiXml } = require('../services/cfdi.service');
 
 const getProfile = async (req, res, next) => {
@@ -55,11 +54,14 @@ const getOrderHistory = async (req, res, next) => {
 
 const saveOrder = async (req, res, next) => {
   try {
-    const { order_data, customer, paypal_txn_id } = req.body;
+    const { order_data, customer, paypal_txn_id, payment_status } = req.body;
 
     if (!order_data || !Array.isArray(order_data) || order_data.length === 0) {
       return res.status(400).json({ mensaje: 'El pedido no contiene productos' });
     }
+
+    // Estado del pago detectado por el cliente desde PayPal; default 'Pagado'.
+    const paymentStatus = OrderModel.ESTADOS.includes(payment_status) ? payment_status : 'Pagado';
 
     // Normalizamos cantidades y calculamos el total (subtotal ya incluye IVA).
     const items = order_data.map((it) => ({
@@ -77,20 +79,15 @@ const saveOrder = async (req, res, next) => {
     const orderXml = buildCfdiXml(order_data);
 
     // Creacion atomica: valida y decrementa stock para evitar sobreventa (RNF-21).
-    const { order, lowStock } = await OrderModel.createOrderWithStock({
+    const { order } = await OrderModel.createOrderWithStock({
       userId: req.user.id,
       items,
       orderXml,
       total,
       customer,
       paypalTxnId: paypal_txn_id,
+      paymentStatus,
     });
-
-    // Notificaciones (no bloquean la respuesta).
-    emailService.sendReceipt(req.user.email, { orderId: order.id, items, total });
-    if (lowStock.length > 0) {
-      emailService.sendLowStockAlert(lowStock);
-    }
 
     res.status(201).json({ mensaje: 'Pedido guardado exitosamente', order });
   } catch (error) {

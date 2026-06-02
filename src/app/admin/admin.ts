@@ -8,6 +8,7 @@ import {
   InventoryItem,
   ProductInput,
 } from '../services/admin.service';
+import { ProductsService } from '../services/product.service';
 
 type Tab = 'users' | 'products' | 'orders' | 'inventory';
 
@@ -20,9 +21,14 @@ type Tab = 'users' | 'products' | 'orders' | 'inventory';
 })
 export class Admin implements OnInit {
   private admin = inject(AdminService);
+  private products = inject(ProductsService);
 
   tab = signal<Tab>('orders');
   message = signal<string>('');
+
+  // Estado de la subida de imagen del producto (RNF-08).
+  previewUrl = signal<string>('');
+  uploading = signal<boolean>(false);
 
   users = signal<AdminUser[]>([]);
   orders = signal<AdminOrder[]>([]);
@@ -93,17 +99,6 @@ export class Admin implements OnInit {
     });
   }
 
-  changeStatus(order: AdminOrder, status: string) {
-    if (!status || status === order.status) return;
-    this.admin.updateOrderStatus(order.id, status).subscribe({
-      next: () => {
-        this.loadOrders();
-        this.flash(`Pedido #${order.id} -> ${status}`);
-      },
-      error: (e) => this.flash(e?.error?.mensaje || 'Error al actualizar'),
-    });
-  }
-
   // --- Inventario ---
   loadInventory() {
     this.admin.getInventory().subscribe({ next: (r) => this.inventory.set(r.inventory) });
@@ -134,7 +129,8 @@ export class Admin implements OnInit {
   }
 
   editProduct(item: InventoryItem) {
-    // Cargamos los datos basicos desde inventario; la imagen/desc se completan al editar.
+    // Cargamos los datos basicos desde inventario y completamos imagen/descripcion
+    // con el producto completo para no perder la imagen al editar.
     this.productForm = {
       id: item.id,
       name: item.name,
@@ -144,11 +140,41 @@ export class Admin implements OnInit {
       description: '',
       stock: item.stock,
     };
+    this.previewUrl.set('');
+    this.products.getProductById(item.id).subscribe({
+      next: (p) => {
+        if (!p) return;
+        this.productForm.imageUrl = p.imageUrl || '';
+        this.productForm.description = p.description || '';
+        this.previewUrl.set(p.imageUrl || '');
+      },
+    });
     this.tab.set('products');
+  }
+
+  // Sube la imagen seleccionada y guarda su URL en el formulario (RNF-08).
+  onImageSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.uploading.set(true);
+    this.admin.uploadImage(file).subscribe({
+      next: (r) => {
+        this.productForm.imageUrl = r.imageUrl;
+        this.previewUrl.set(r.imageUrl);
+        this.uploading.set(false);
+        this.flash('Imagen subida');
+      },
+      error: (e) => {
+        this.uploading.set(false);
+        this.flash(e?.error?.mensaje || 'No se pudo subir la imagen');
+      },
+    });
   }
 
   resetProductForm() {
     this.productForm = this.emptyProduct();
+    this.previewUrl.set('');
   }
 
   saveProduct() {

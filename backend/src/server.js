@@ -1,10 +1,9 @@
-require('ts-node/register');
 require('dotenv').config();
 
 const app = require('./app');
 const { connectDB } = require('./config/db');
 const { runMigrations } = require('./config/migrate');
-const { validatePaypalConfig } = require('./config/paypal.config.ts');
+const { validatePaypalConfig } = require('./config/paypal.config');
 
 const PORT = Number(process.env.PORT || 3000);
 

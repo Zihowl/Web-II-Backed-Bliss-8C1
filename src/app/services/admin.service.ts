@@ -56,6 +56,12 @@ export class AdminService {
   }
 
   // --- Productos ---
+  uploadImage(file: File): Observable<{ imageUrl: string }> {
+    const form = new FormData();
+    form.append('image', file);
+    return this.http.post<{ imageUrl: string }>(`${API}/admin/uploads`, form);
+  }
+
   createProduct(data: ProductInput): Observable<any> {
     return this.http.post(`${API}/admin/products`, data);
   }
@@ -75,10 +81,6 @@ export class AdminService {
       if (v) params = params.set(k, v);
     }
     return this.http.get<{ orders: AdminOrder[]; estados: string[] }>(`${API}/orders`, { params });
-  }
-
-  updateOrderStatus(id: number, status: string): Observable<any> {
-    return this.http.put(`${API}/orders/${id}/status`, { status });
   }
 
   // --- Inventario ---

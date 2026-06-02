@@ -18,8 +18,6 @@ export const routes: Routes = [
   { path: 'profile', canActivate: [authGuard], loadComponent: () => import('./user/profile/profile').then(m => m.Profile) },
   { path: 'history', canActivate: [authGuard], loadComponent: () => import('./user/history/history').then(m => m.History) },
   { path: 'admin', canActivate: [adminGuard], loadComponent: () => import('./admin/admin').then(m => m.Admin) },
-  { path: 'reset-password', loadComponent: () => import('./auth/reset-password/reset-password').then(m => m.ResetPassword) },
-  { path: 'forgot-password', loadComponent: () => import('./auth/forgot-password/forgot-password').then(m => m.ForgotPassword) },
 
   { path: ':docType', component: LegalComponent },
   { path: '**', redirectTo: '' },

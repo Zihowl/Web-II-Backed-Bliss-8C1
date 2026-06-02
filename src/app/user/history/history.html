@@ -42,18 +42,10 @@
               </div>
             </div>
 
-            <!-- IU-22: linea de tiempo visual (stepper) del estado del pedido -->
-            <div class="order-stepper">
-              @for (etapa of ESTADOS; track etapa; let i = $index) {
-                <div
-                  class="step"
-                  [class.done]="i <= stepIndex(order)"
-                  [class.current]="i === stepIndex(order)"
-                >
-                  <span class="step-dot">{{ i + 1 }}</span>
-                  <span class="step-label">{{ etapa }}</span>
-                </div>
-              }
+            <!-- Estado del pago detectado automáticamente desde PayPal -->
+            <div class="order-payment-status">
+              <span class="label">Estado del pago</span>
+              <span [class]="paymentBadgeClass(order.status)">{{ order.status || 'Pagado' }}</span>
             </div>
 
             <div class="order-info-row">
@@ -98,7 +90,7 @@
         <div class="invoice-content">
           <!-- Encabezado CFDI -->
           <div class="invoice-section invoice-title">
-            <h4>COMPROBANTE DE COMPRA - CFDI</h4>
+            <h4>COMPROBANTE DE COMPRA</h4>
           </div>
 
           <!-- Datos del emisor -->
@@ -203,14 +195,6 @@
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="action-button print" (click)="printInvoice()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 6 2 18 2 18 9"></polyline>
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-              <rect x="6" y="14" width="12" height="8"></rect>
-            </svg>
-            Imprimir
-          </button>
           <button type="button" class="action-button close" (click)="closeInvoice()">
             Cerrar
           </button>

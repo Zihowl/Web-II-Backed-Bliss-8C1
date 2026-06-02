@@ -1,7 +1,8 @@
 const { Router } = require('express');
 const { verifyToken, requireAdmin } = require('../middleware/auth.middleware');
 const { listUsers, deleteUser } = require('../controllers/admin.controller');
-const { addProduct, editProduct, removeProduct } = require('../controllers/products.controller');
+const { addProduct, editProduct, removeProduct, uploadImage } = require('../controllers/products.controller');
+const { upload } = require('../middleware/upload.middleware');
 
 const router = Router();
 
@@ -11,6 +12,16 @@ router.use(verifyToken, requireAdmin);
 // Gestion de usuarios (RF-05, IU-05/06).
 router.get('/users', listUsers);
 router.delete('/users/:id', deleteUser);
+
+// Subida de imagen de producto (RNF-08). Devuelve { imageUrl }.
+router.post('/uploads', (req, res, next) => {
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ mensaje: err.message });
+    }
+    next();
+  });
+}, uploadImage);
 
 // CRUD de productos (RF-07, RF-08, RNF-08).
 router.post('/products', addProduct);

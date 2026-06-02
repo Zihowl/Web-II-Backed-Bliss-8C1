@@ -55,6 +55,16 @@ const editProduct = async (req, res, next) => {
   }
 };
 
+// Subida de imagen de producto (RNF-08). Devuelve la URL publica del archivo.
+const uploadImage = async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ mensaje: 'No se recibio ninguna imagen' });
+  }
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+  res.status(201).json({ imageUrl });
+};
+
 const removeProduct = async (req, res, next) => {
   try {
     const product = await deleteProduct(Number(req.params.id));
@@ -72,4 +82,5 @@ module.exports = {
   addProduct,
   editProduct,
   removeProduct,
+  uploadImage,
 };

@@ -1,28 +1,17 @@
-import { paypalConfig } from '../config/paypal.config';
-
-export interface PaypalOrderItem {
-  nombre: string;
-  cantidad: number;
-  precio: number;
-}
-
-export interface CreatePaypalOrderPayload {
-  total: number | string;
-  items: PaypalOrderItem[];
-}
+const { paypalConfig } = require('../config/paypal.config');
 
 /**
  * Codifica las credenciales en formato Base64.
  * Combina el ID de cliente y la contraseña secreta.
  */
-function getBasicAuth(): string {
+function getBasicAuth() {
   return Buffer.from(`${paypalConfig.clientId}:${paypalConfig.clientSecret}`).toString('base64');
 }
 
 /**
  * Obtiene el token de acceso temporal de PayPal.
  */
-export async function getAccessToken(): Promise<string> {
+async function getAccessToken() {
   const response = await fetch(`${paypalConfig.baseUrl}/v1/oauth2/token`, {
     method: 'POST',
     headers: {
@@ -44,7 +33,7 @@ export async function getAccessToken(): Promise<string> {
 /**
  * Crea una orden de pago enviando los detalles del carrito.
  */
-export async function createPaypalOrder(orderData: CreatePaypalOrderPayload): Promise<unknown> {
+async function createPaypalOrder(orderData) {
   const accessToken = await getAccessToken();
 
   const body = {
@@ -61,7 +50,7 @@ export async function createPaypalOrder(orderData: CreatePaypalOrderPayload): Pr
             },
           },
         },
-        items: orderData.items.map(item => ({
+        items: orderData.items.map((item) => ({
           name: item.nombre,
           quantity: String(item.cantidad),
           unit_amount: {
@@ -94,7 +83,7 @@ export async function createPaypalOrder(orderData: CreatePaypalOrderPayload): Pr
 /**
  * Confirma y procesa el cobro final una vez que el usuario aprueba el pago.
  */
-export async function capturePaypalOrder(orderId: string): Promise<unknown> {
+async function capturePaypalOrder(orderId) {
   const accessToken = await getAccessToken();
 
   const response = await fetch(`${paypalConfig.baseUrl}/v2/checkout/orders/${orderId}/capture`, {
@@ -113,3 +102,5 @@ export async function capturePaypalOrder(orderId: string): Promise<unknown> {
 
   return data;
 }
+
+module.exports = { getAccessToken, createPaypalOrder, capturePaypalOrder };

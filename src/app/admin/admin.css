@@ -80,7 +80,7 @@
   border-radius: 6px;
   margin-bottom: 12px;
 }
-.product-form, .adjust-form {
+.product-form, .adjust-box {
   background: #fff;
   border: 1px solid #ece0cf;
   border-radius: 8px;
@@ -91,19 +91,41 @@
   gap: 10px;
   margin-top: 12px;
 }
-.product-form label, .adjust-form label {
+.product-form label, .adjust-box label {
   display: flex;
   flex-direction: column;
   font-size: 0.9rem;
   gap: 4px;
 }
 .product-form input, .product-form textarea,
-.adjust-form input {
+.adjust-box input {
   padding: 7px;
   border: 1px solid #d9c7ad;
   border-radius: 5px;
 }
+.adjust-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.adjust-box {
+  width: 100%;
+  margin: 16px;
+  margin-top: 0;
+}
 .hint { font-size: 0.8rem; color: #888; }
+.img-preview {
+  max-width: 160px;
+  max-height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  margin: 0.25rem 0;
+}
 .confirm-overlay {
   position: fixed;
   inset: 0;

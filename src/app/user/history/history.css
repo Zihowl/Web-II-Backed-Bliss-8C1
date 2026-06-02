@@ -380,15 +380,6 @@
   transition: all 0.2s ease;
 }
 
-.action-button.print {
-  background: #5b3200;
-  color: #fffcf2;
-}
-
-.action-button.print:hover {
-  background: #3d2500;
-}
-
 .action-button.close {
   background: #e8dcc8;
   color: #3d2500;
@@ -396,56 +387,6 @@
 
 .action-button.close:hover {
   background: #d8ccb8;
-}
-
-/* Print Styles */
-@media print {
-  :host {
-    background: white;
-  }
-
-  .history-container,
-  .history-card {
-    max-width: 100%;
-    padding: 0;
-    margin: 0;
-    background: white;
-    border: none;
-    box-shadow: none;
-  }
-
-  .history-header {
-    border: none;
-  }
-
-  .orders-list,
-  .modal-overlay {
-    display: none !important;
-  }
-
-  .modal-overlay.active,
-  .modal-content {
-    position: static;
-    max-width: 100%;
-    max-height: 100%;
-    box-shadow: none;
-    padding: 0;
-  }
-
-  .modal-header,
-  .modal-actions {
-    display: none;
-  }
-
-  .invoice-content {
-    padding: 0;
-    font-size: 12px;
-  }
-
-  body {
-    margin: 0;
-    padding: 0;
-  }
 }
 
 @media (max-width: 640px) {
@@ -491,52 +432,37 @@
     justify-content: center;
   }
 }
-/* IU-22: stepper de estado del pedido */
-.order-stepper {
+/* Estado del pago */
+.order-payment-status {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
   margin: 14px 0;
-  gap: 4px;
 }
-.order-stepper .step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  position: relative;
+.order-payment-status .label {
+  font-size: 0.78rem;
   color: #b0a290;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
-.order-stepper .step::before {
-  content: '';
-  position: absolute;
-  top: 13px;
-  left: -50%;
-  width: 100%;
-  height: 2px;
+.pay-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
   background: #e0d4c4;
-  z-index: 0;
+  color: #7a5a2e;
 }
-.order-stepper .step:first-child::before { display: none; }
-.order-stepper .step.done { color: #7a5a2e; }
-.order-stepper .step.done::before { background: #b5651d; }
-.order-stepper .step-dot {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #e0d4c4;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  z-index: 1;
+.pay-badge.pagado {
+  background: #e3f4e3;
+  color: #2e7d32;
 }
-.order-stepper .step.done .step-dot { background: #b5651d; }
-.order-stepper .step.current .step-dot {
-  box-shadow: 0 0 0 3px rgba(181, 101, 29, 0.3);
+.pay-badge.error {
+  background: #fde3e3;
+  color: #c62828;
 }
-.order-stepper .step-label {
-  font-size: 0.72rem;
-  margin-top: 4px;
+.pay-badge.cancelado {
+  background: #ececec;
+  color: #6b6b6b;
 }
